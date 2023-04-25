@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Window To The World</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.min.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js"></script>
+  <script src='https://npmcdn.com/csv2geojson@latest/csv2geojson.js'></script>
+  <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+  <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.min.js'></script>
+  
+  
+  <style>
+    body { margin: 0; padding: 0; 
+      font-size: 3.2vw;
+    }
+    #map { position: fixed; top: 0; bottom: 0; width: 100%; height:100%;}
+    .HoverInfo {
+      position: absolute;
+      left:0;
+      font-family: Segoe UI;
+      margin-top: 0px;
+      margin-left: 0px;
+      padding: 10px 60px 0px 0px;
+      font-size: 36px;
+      color:#FFF;
+      opacity:100%;
+      z-index:1;
+      text-align: center;
+      
+      
+    }      
+    .display{
+      background-color: #011E41;
+      border-radius: 10px;
+      border: 5px solid #FFF;
+      padding: 0px 0px 0px 0px;
+    }
+    a.link{
+      color:white;
+    }
+    a.visited{
+      color:white;
+    }
+    
+    /*GEOCODER CSS*/
+    /* Basics */
+    .mapboxgl-ctrl-geocoder,
+    .mapboxgl-ctrl-geocoder *,
+    .mapboxgl-ctrl-geocoder *:after,
+    .mapboxgl-ctrl-geocoder *:before {
+      box-sizing: border-box;
+    }
+    
+    .mapboxgl-ctrl-geocoder {
+      font-size: 18px;
+      line-height: 24px;
+      font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, Helvetica, sans-serif;
+      position: relative;
+      background-color: #fff;
+      width: 100%;
+      min-width: 240px;
+      z-index: 1;
+      border-radius: 4px;
+      transition: width .25s, min-width .25s;
+    }
+    
+    .mapboxgl-ctrl-geocoder--input {
+      font: inherit;
+      width: 100%;
+      border: 0;
+      background-color: transparent;
+      margin: 0;
+      height: 50px;
+      color: #404040; /* fallback */
+      color: rgba(0, 0, 0, 0.75);
+      padding: 6px 45px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    
+    .mapboxgl-ctrl-geocoder--input::-ms-clear {
+      display: none; /* hide input clear button in IE */
+    }
+    
+    .mapboxgl-ctrl-geocoder--input:focus {
+      color: #404040; /* fallback */
+      color: rgba(0, 0, 0, 0.75);
+      outline: 0;
+      box-shadow: none;
+      outline: thin dotted;
+    }
+    
+    .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right > * {
+      z-index: 2;
+      position: absolute;
+      right: 8px;
+      top: 7px;
+      display: none;
+    }
+    
+    .mapboxgl-ctrl-geocoder,
+    .mapboxgl-ctrl-geocoder .suggestions {
+      box-shadow: 0 0 10px 2px rgba(0,0,0,.1);
+    }
+    
+    /* Collapsed */
+    .mapboxgl-ctrl-geocoder.mapboxgl-ctrl-geocoder--collapsed {
+      width: 50px;
+      min-width: 50px;
+      transition: width .25s, min-width .25s;
+    }
+    
+    /* Suggestions */
+    .mapboxgl-ctrl-geocoder .suggestions {
+      background-color: #fff;
+      border-radius: 4px;
+      left: 0;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      position: absolute;
+      width: 100%;
+      top: 110%; /* fallback */
+      top: calc(100% + 6px);
+      z-index: 1000;
+      overflow: hidden;
+      font-size: 15px;
+    }
+    
+    .mapboxgl-ctrl-bottom-left .suggestions,
+    .mapboxgl-ctrl-bottom-right .suggestions {
+      top: auto;
+      bottom: 100%;
+    }
+    
+    .mapboxgl-ctrl-geocoder .suggestions > li > a {
+      cursor: default;
+      display: block;
+      padding: 6px 12px;
+      color: #404040;
+    }
+    
+    .mapboxgl-ctrl-geocoder .suggestions > .active > a,
+    .mapboxgl-ctrl-geocoder .suggestions > li > a:hover {
+      color: #404040;
+      background-color: #f3f3f3;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    
+    .mapboxgl-ctrl-geocoder--suggestion-title {
+      font-weight: bold;
+    }
+    
+    .mapboxgl-ctrl-geocoder--suggestion-title,
+    .mapboxgl-ctrl-geocoder--suggestion-address {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    
+    /* Icons */
+    .mapboxgl-ctrl-geocoder--icon {
+      display: inline-block;
+      vertical-align: middle;
+      fill: #757575;
+      top: 15px;
+    }
+    
+    .mapboxgl-ctrl-geocoder--icon-search {
+      position: absolute;
+      top: 13px;
+      left: 12px;
+      width: 23px;
+      height: 23px;
+    }
+    
+    .mapboxgl-ctrl-geocoder--button {
+      padding: 0;
+      margin: 0;
+      border: none;
+      cursor: pointer;
+      background: #fff;
+      line-height: 1;
+    }
+    
+    .mapboxgl-ctrl-geocoder--icon-close {
+      width: 20px;
+      height: 20px;
+      margin-top: 8px;
+      margin-right: 3px;
+    }
+    
+    .mapboxgl-ctrl-geocoder--button:hover .mapboxgl-ctrl-geocoder--icon-close {
+      fill: #909090;
+    }
+    
+    .mapboxgl-ctrl-geocoder--icon-geolocate {
+      width: 22px;
+      height: 22px;
+      margin-top: 6px;
+      margin-right: 3px;
+    }
+    
+    .mapboxgl-ctrl-geocoder--icon-loading {
+      width: 26px;
+      height: 26px;
+      margin-top: 5px;
+      margin-right: 0px;
+      -moz-animation: rotate 0.8s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95);
+      -webkit-animation: rotate 0.8s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95);
+      animation: rotate 0.8s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95);
+    }
+    
+    .mapboxgl-ctrl-geocoder--powered-by {
+      display: block;
+      float: left;
+      padding: 6px 12px;
+      padding-bottom: 9px;
+      font-size: 13px;
+    }
+    
+    .mapboxgl-ctrl-geocoder--powered-by a {
+      color: #909090;
+    }
+    
+    .mapboxgl-ctrl-geocoder--powered-by a:not(:hover) {
+      text-decoration: none;  
+    }
+    
+    /* Animation */
+    @-webkit-keyframes rotate {
+      from {
+        -webkit-transform: rotate(0);
+        transform: rotate(0);
+      }
+      to {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+      }
+    }
+    
+    @keyframes rotate {
+      from {
+        -webkit-transform: rotate(0);
+        transform: rotate(0);
+      }
+      to {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+      }
+    }
+    
+    /* Media queries*/
+    @media screen and (min-width: 640px) {
+      
+      .mapboxgl-ctrl-geocoder.mapboxgl-ctrl-geocoder--collapsed {
+        width: 36px;
+        min-width: 36px;
+      }
+      
+      .mapboxgl-ctrl-geocoder {
+        width: 33.3333%;
+        font-size: 15px;
+        line-height: 20px;
+        max-width: 360px;
+      }
+      .mapboxgl-ctrl-geocoder .suggestions {
+        font-size: 13px;
+      }
+      
+      .mapboxgl-ctrl-geocoder--icon {
+        top: 8px;
+      }
+      
+      .mapboxgl-ctrl-geocoder--icon-close {
+        width: 16px;
+        height: 16px;
+        margin-top: 3px;
+        margin-right: 0;
+      }
+      
+      .mapboxgl-ctrl-geocoder--icon-geolocate {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        margin-right: 0;
+      }
+      
+      .mapboxgl-ctrl-geocoder--icon-search {
+        left: 7px;
+        width: 20px;
+        height: 20px;
+      }
+      
+      .mapboxgl-ctrl-geocoder--input {
+        height: 36px;
+        padding: 6px 35px;
+      }
+      
+      .mapboxgl-ctrl-geocoder--icon-loading {
+        width: 26px;
+        height: 26px;
+        margin-top: -2px;
+        margin-right: -5px;
+      }
+      
+      .mapbox-gl-geocoder--error{
+        color:#909090;
+        padding: 6px 12px;
+        font-size: 16px;
+        text-align: center;
+      }
+      
+      .mapboxgl-ctrl-geocoder--powered-by {
+        font-size: 11px !important;
+      }
+    }
+    /*-------------------*/
+  </style>
+</head>
+<body>
+  <style>
+    .mapboxgl-popup-content{
+      width: 150%;
+      font-family: Arial, Helvetica, sans-serif;
+      color:#FFF;
+      padding: 10px 10px 10px 10px;
+      background-color: #011E41;
+      border-radius: 10px;
+      border : 5px solid #FFF;
+      
+    } 
+    .alignleft {
+      float: left;
+      font-size:1vw;
+    }
+    .alignleft:link{
+      color:white;
+    }
+    .alignright {
+      float: right;
+      white-space: initial;
+      word-wrap: break-word;
+      font-size:0.8vw;
+    }
+    .a{
+      font-size:1vw;
+    }
+    body {
+      overflow: hidden; /* Hide scrollbars */
+    }
+    
+    
+  </style>
+  
+  
+  
+  <div class='HoverInfo'>
+    <div class = 'display'><span id='regioninfo'></span></div>
+  </div>
+  <table id="table" style="visibility: hidden;"></table>
+  <div id="map"></div>
+  
+  
+  
+  <script>
+    var regionnametext;
+    //read csv file
+    $(document).ready(function() {
+      $.ajax({
+        type: "GET",
+        url: "./data.csv",
+        dataType: "text",
+        success: function(data) {processData(data);}
+      });
+    });
+    var geoJson=null;
+    var viewall=null;
+    var customData2;
+    function processData(allText) {
+      
+      table.innerHTML="";
+      let csv = allText;
+      let rows = csv.split("\r\n");
+      
+      
+      for (let row of rows){
+        let cols = row.match(/(?:\"([^\"]*(?:\"\"[^\"]*)*)\")|([^\",]+)/g);
+        if (cols !=null){
+          let tr = table.insertRow();
+          for ( let col of cols){
+            let td = tr.insertCell();
+            td.innerHTML = col.replace(/(^"|"$)/g,"");
+          }
+          
+        }
+      } 
+      
+      
+      
+    };
+    
+    
+    
+    function systemOnClick(x){
+      alert(x);
+    }
+    
+    function getData(regionid){
+      var table = document.getElementById("table");
+      var totalsystem=0,avguti = 0, avgmci = 0,sumfl =0,totaltiger=0,totallynx=0,totalcougar=0,totalpanther=0,total600=0,total1000=0,total2000=0,total3000=0,total4000=0,totalusv=0;
+      var rowsUTI = rowsMCI= rowsFL=0;
+      var systemnamearray = [];
+      var array1=[];
+      var arrayfinal=[];
+      var stringregion = null;
+      switch(regionid){
+        case 1: stringregion ="Americas";
+        break;
+        case 2: stringregion ="EUAF";
+        break;
+        case 3: stringregion ="APAC";
+        break;
+        case 4: stringregion ="MEI";
+        break;
+      }
+      for (var i=1;i<table.rows.length;i++)
+      {
+        if (table.rows[i].cells.item(4).innerHTML==stringregion){
+          systemnamearray.push(table.rows[i].cells.item(9).innerHTML+" ");
+          
+          if(table.rows[i].cells.item(5).innerHTML!="")
+          {
+            avguti+=1.0*parseFloat(table.rows[i].cells.item(5).innerHTML);
+            rowsUTI = rowsUTI +1;
+          }
+          if(table.rows[i].cells.item(6).innerHTML!="n/a")
+          {
+            avgmci+=1.0*parseFloat(table.rows[i].cells.item(6).innerHTML);
+            rowsMCI = rowsMCI +1;
+          }
+          if(table.rows[i].cells.item(7).innerHTML!="")
+          {
+            sumfl+=parseInt(table.rows[i].cells.item(7).innerHTML);
+            rowsFL = rowsFL +1;
+          }
+          if(table.rows[i].cells.item(3).innerHTML!="")
+          {
+            totalsystem = totalsystem+1;
+          }
+          switch(table.rows[i].cells.item(3).innerHTML)
+          {
+            case "Tiger": totaltiger+=1;
+            break;
+            case "Cougar":totalcougar+=1;
+            break;
+            case "Lynx":totallynx+=1;
+            break;
+            case "Panther": totalpanther+=1;
+            break;
+            case "FCV 600": total600+=1;
+            break;
+            case "FCV 1000": total1000+=1;
+            break;
+            case "FCV 2000": total2000+=1;
+            break;
+            case "FCV 3000": total3000+=1;
+            break;
+            case "FCV 4000": total4000+=1;
+            break;
+            case "USV": totalusv+=1;
+            break;
+          }
+        }
+      }
+      if (rowsUTI>0){
+        avguti = 1.0*avguti/rowsUTI;
+        avguti = avguti.toFixed(2);
+      }
+      if (rowsMCI>0){
+        avgmci = 1.0*avgmci/rowsMCI;
+        avgmci = avgmci.toFixed(2);
+      }
+      array1.push(avguti);
+      array1.push(avgmci);
+      array1.push(sumfl);
+      array1.push(totalsystem);
+      array1.push(totaltiger);
+      array1.push(totalcougar);
+      array1.push(totallynx);
+      array1.push(totalpanther);
+      array1.push(total600);
+      array1.push(total1000);
+      array1.push(total2000);
+      array1.push(total3000);
+      array1.push(total4000);
+      array1.push(totalusv);
+      
+      arrayfinal = array1.concat(systemnamearray);
+      return arrayfinal;
+    }
+    
+    function getGlobalData(){
+      var table = document.getElementById("table");
+      var totalsystem=0,avguti = 0, avgmci = 0,sumfl =0,totaltiger=0,totallynx=0,totalcougar=0,totalpanther=0,total600=0,total1000=0,total2000=0,total3000=0,total4000=0,totalusv=0;
+      var rowsUTI = rowsMCI= rowsFL=0;
+      var systemnamearray = [];
+      var array1=[];
+      var arrayfinal=[];
+      var stringregion = null;
+      
+      for (var i=1;i<table.rows.length;i++)
+      {
+          systemnamearray.push(table.rows[i].cells.item(9).innerHTML+" ");
+          if(table.rows[i].cells.item(5).innerHTML!="")
+          {
+            avguti+=1.0*parseFloat(table.rows[i].cells.item(5).innerHTML);
+            rowsUTI = rowsUTI +1;
+          }
+          if(table.rows[i].cells.item(6).innerHTML!="n/a")
+          {
+            avgmci+=1.0*parseFloat(table.rows[i].cells.item(6).innerHTML);
+            rowsMCI = rowsMCI +1;
+          }
+          if(table.rows[i].cells.item(7).innerHTML!="")
+          {
+            sumfl+=parseInt(table.rows[i].cells.item(7).innerHTML);
+            rowsFL = rowsFL +1;
+          }
+          if(table.rows[i].cells.item(3).innerHTML!="")
+          {
+            totalsystem = totalsystem+1;
+          }
+          switch(table.rows[i].cells.item(3).innerHTML)
+          {
+            case "Tiger": totaltiger+=1;
+            break;
+            case "Cougar":totalcougar+=1;
+            break;
+            case "Lynx":totallynx+=1;
+            break;
+            case "Panther": totalpanther+=1;
+            break;
+            case "FCV 600": total600+=1;
+            break;
+            case "FCV 1000": total1000+=1;
+            break;
+            case "FCV 2000": total2000+=1;
+            break;
+            case "FCV 3000": total3000+=1;
+            break;
+            case "FCV 4000": total4000+=1;
+            break;
+            case "USV": totalusv+=1;
+            break;
+          }
+        
+      }
+      if (rowsUTI>0){
+        avguti = 1.0*avguti/rowsUTI;
+        avguti = avguti.toFixed(2);
+      }
+      if (rowsMCI>0){
+        avgmci = 1.0*avgmci/rowsMCI;
+        avgmci = avgmci.toFixed(2);
+      }
+      array1.push(avguti);
+      array1.push(avgmci);
+      array1.push(sumfl);
+      array1.push(totalsystem);
+      array1.push(totaltiger);
+      array1.push(totalcougar);
+      array1.push(totallynx);
+      array1.push(totalpanther);
+      array1.push(total600);
+      array1.push(total1000);
+      array1.push(total2000);
+      array1.push(total3000);
+      array1.push(total4000);
+      array1.push(totalusv);
+      
+      arrayfinal = array1.concat(systemnamearray);
+      return arrayfinal;
+    }
+
+
+    var transformRequest = (url, resourceType) => {
+      var isMapboxRequest =
+      url.slice(8, 22) === "api.mapbox.com" ||
+      url.slice(10, 26) === "tiles.mapbox.com";
+      return {
+        url: isMapboxRequest
+        ? url.replace("?", "?pluginName=sheetMapper&")
+        : url
+      };
+    };    
+    
+    
+    
+    
+    
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZGlhLXRlc3RpbmciLCJhIjoiY2w5Z3NvMWszM3k1ZzNvcW14djU0Ym02MCJ9.izZNwBPll2utcUxuKduKgA';
+    const bounds = [
+    [-161, -45], // Southwest coordinates
+    [161, 75] // Northeast coordinates
+    ];
+    const map = new mapboxgl.Map({
+      container: 'map',
+      // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
+      style: 'mapbox://styles/dia-testing/claadh7qr004y14ozprul8twb',
+      center: [0, 20.511633884425464],
+      bearing: 0,// 0 or 30
+      zoom: 0.5, //1 map 2 globe
+      maxZoom:3.5,
+      minZoom:0,
+      renderWorldCopies: false,
+      maxBounds: bounds,
+      projection:'mercator', //mercator or globe
+      continuousWorld: true,
+      pitchWithRotate:false,
+      dragRotate:false,
+      transformRequest: transformRequest
+    });
+    let hoveredStateId = null;
+    let clickedregion = null;
+    let clickedstatus = null;
+    $(document).ready(function () {
+      $.ajax({
+        type: "GET",
+        //YOUR TURN: Replace with csv export link
+        url: './data.csv',
+        dataType: "text",
+        success: function (csvData) { makeGeoJSON(csvData); }
+      });
+    });
+    function makeGeoJSON(csvData) {
+      csv2geojson.csv2geojson(csvData, {
+        latfield: 'Latitude',
+        lonfield: 'Longitude',
+        delimiter: ','
+      }, function (err, data) {
+        customData2 = data;
+        map.on('load', function () {
+          //Add the the layer to the map
+          //loadglobalpopup();
+          
+          map.addLayer({
+            'id': 'csvData',
+            'type': 'circle',
+            'minzoom':2.4,
+            'source': {
+              'type': 'geojson',
+              'data': data
+            },
+            'paint': {
+              'circle-radius': 7,
+              'circle-color': "#0082C0",
+              'circle-stroke-color':'#FFF',
+              'circle-stroke-width':2
+            }
+          });  
+          // When a click event occurs on a feature in the csvData layer, open a popup at the
+          // location of the feature, with description HTML from its properties.
+          map.on('click', 'csvData', function (e) {
+            hoveredStateId=true;
+            var coordinates = e.features[0].geometry.coordinates.slice();
+            
+            //set popup text
+            //You can adjust the values of the popup to match the headers of your CSV.
+            // For example: e.features[0].properties.Name is retrieving information from the field Name in the original CSV.
+            var description = `<h3>` + e.features[0].properties.Name2 + `</h3><hr>` + `<h4>` + `<b>` + `Lease Status: ` + `</b>` + e.features[0].properties.LeaseStatus + `</h4>` + `<h4>` + `<b>` + `Maintenance Compliance Indicator: ` + `</b>` + e.features[0].properties.MCI + `</h4>`;
+            
+            // Ensure that if the map is zoomed out such that multiple
+            // copies of the feature are visible, the popup appears
+            // over the copy being pointed to.
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+              coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+            
+            
+            //add Popup to map
+            /*
+            new mapboxgl.Popup()
+            .setLngLat(coordinates)
+            .setHTML(description)
+            .addTo(map);*/
+          });
+          
+          // Change the cursor to a pointer when the mouse is over the places layer.
+          map.on('mouseenter', 'csvData', function () {
+            map.getCanvas().style.cursor = 'pointer';
+          });
+          
+          // Change it back to a pointer when it leaves.
+          map.on('mouseleave', 'places', function () {
+            map.getCanvas().style.cursor = '';
+          });
+          
+          
+          // When a click event occurs on a feature in the csvData layer, open a popup at the
+          // location of the feature, with description HTML from its properties.
+          map.on('click', 'csvData', function(e) {
+            showpoint2(e.features[0].geometry.coordinates.slice(),
+            e.features[0].properties.Name2,
+            e.lngLat.lng,
+            e.features[0].properties
+            
+            );
+            
+          });
+          
+          // Change the cursor to a pointer when the mouse is over the places layer.
+          map.on('mouseenter', 'csvData', function() {
+            map.getCanvas().style.cursor = 'pointer';
+          });
+          
+          // Change it back to a pointer when it leaves.
+          map.on('mouseleave', 'places', function() {
+            map.getCanvas().style.cursor = '';
+          });
+          
+
+          
+          
+        });
+        
+      });
+    };
+    
+    var popup;
+    function showpoint2(e1,e2,e3,e4){
+      if(popup!=null)
+      {popup.remove();}
+      var coordinates = e1;
+      hoveredStateId=true;
+      var utiurl;
+      //set popup text
+      //You can adjust the values of the popup to match the headers of your CSV.
+      // For example: e.features[0].properties.Name is retrieving information from the field Name in the original CSV.
+      switch(e4.Region){
+        case "Americas": utiurl='https://app.powerbi.com/groups/me/reports/c4b244bf-1e0d-47f7-a214-de2252eccb11/ReportSection7d1237de7977247126a7';
+        break;
+        case "EUAF": utiurl='https://app.powerbi.com/groups/me/reports/c4b244bf-1e0d-47f7-a214-de2252eccb11/ReportSection6d061e965f0ba9aff032';
+        break;
+        case "APAC": utiurl='https://app.powerbi.com/groups/me/reports/c4b244bf-1e0d-47f7-a214-de2252eccb11/ReportSectionb91217c9b3eb1f2c87d1';
+        break;
+        case "MEI": utiurl='https://app.powerbi.com/groups/me/reports/c4b244bf-1e0d-47f7-a214-de2252eccb11/ReportSection9e671e02a6a22bd73827';
+        break;
+      }
+      var description =
+      `<h1>` +
+        e2 +
+        `</h1><hr>`+
+        `<b><div class = "alignleft">ROV:</div><div align="right" style="word-wrap: break-word">`+ e4.ROV +`</div></b>` +
+        `<b><div class = "alignleft">TMS:</div><div align="right" style="word-wrap: break-word">`+ e4.TMS +`</div></b>` +
+        `<b><div class = "alignleft">Control Cabin/Room:</div><div align="right" style="word-wrap: break-word">`+ e4.CC +`</div></b>` +
+        `<b><div class = "alignleft">Workshop Cabin:</div><div align="right" style="word-wrap: break-word">`+ e4.WC +`</div></b>` +
+        `<b><div class = "alignleft">Combined LARS:</div><div align="right" style="word-wrap: break-word">`+ e4.CLARS +`</div></b>` +
+        `<b><div class = "alignleft">A-Frame:</div><div align="right" style="word-wrap: break-word">`+ e4.AFrame +`</div></b>` +
+        `<b><div class = "alignleft">Winch:</div><div align="right" style="word-wrap: break-word">`+ e4.Winch +`</div></b>` +
+        `<b><div class = "alignleft">HPU:</div><div align="right" style="word-wrap: break-word">`+ e4.HPU +`</div></b>` +
+        `<hr><b><div class = "alignleft">Lease Status:</div><div align="right" style="word-wrap: break-word">`+ e4.LeaseStatus +`</div></b>` +
+        `<b><div class = "alignleft">Umbilical Length:</div><div align="right" style="word-wrap: break-word">`+ e4.UmbilicalLength +`</div></b>` +
+        `<b><div class = "alignleft">Maintenance Compliance Indicator:</div><div align="right" style="word-wrap: break-word">`+ e4.MCI +`</div></b>` +
+        `<b><a href="${utiurl}?filter=ROV_x0020_Assets%2FSystem%20eq%20%27${e2}%27" style="color:white;font-size:1vw">Utilisation Rate:  </a><div class = "alignright">`+ e4.UtilisationRate +`</div></b><br>` +
+        `<b><a href="https://app.powerbi.com/groups/me/reports/fa8717f9-9eac-4426-933e-0e59a2c09a9d/ReportSection6090cfc3e5e1ac6250cb?filter=System%2FName%20eq%20%27${e2}%27" style="color:white;font-size:1vw">Total Fault Logs:  </a><div class = "alignright">`+ e4.FaultLogs +`</div></b>`;
+        // Ensure that if the map is zoomed out such that multiple
+        // copies of the feature are visible, the popup appears
+        // over the copy being pointed to.
+        while (Math.abs(e3 - coordinates[0]) > 180) {
+          coordinates[0] += e3 > coordinates[0] ? 360 : -360;
+        }
+        
+        //add Popup to map
+        map.flyTo({
+          center: (coordinates),
+          duration: 3000,
+          zoom:3.5,
+          pitch:0,
+          bearing:0
+        });
+        
+        popup=new mapboxgl.Popup({maxWidth:'15%',anchor:'bottom'})
+        .setLngLat(coordinates)
+        .setHTML(description)
+        .addTo(map);
+      }
+      
+      function forwardGeocoder(query) {
+        
+        const matchingFeatures = [];
+        for (const feature of customData2.features) {
+          // Handle queries with different capitalization
+          // than the source data by calling toLowerCase().
+          if (
+          feature.properties.Name2
+          .toLowerCase()
+          .includes(query.toLowerCase())
+          ) {
+            // Add a tree emoji as a prefix for custom
+            // data results using carmen geojson format:
+            // https://github.com/mapbox/carmen/blob/master/carmen-geojson.md
+            feature['place_name'] = feature.properties.Name2;
+            feature['center'] = feature.geometry.coordinates;
+            feature['e1']=feature.geometry.coordinates.slice(),
+            feature['e2']=feature.properties.Name2,
+            feature['e3']=feature.geometry.coordinates,
+            feature['e4']=feature.properties
+            matchingFeatures.push(feature);
+            
+          }
+        }
+        return matchingFeatures;
+      }
+      
+      
+      
+      var geocoder;
+      var globalpopup;
+      // Add the control to the map.
+      var filterregionname;
+      
+      
+      map.addControl(
+      geocoder=new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken,
+        localGeocoder: forwardGeocoder,
+        countries:'zz',
+        zoom: 14,
+        placeholder: 'Enter search e.g. USV',
+        mapboxgl: mapboxgl,
+        marker:false,
+        properties:69
+        
+      })
+      
+      
+      
+      );
+      geocoder.on('result',e => {
+        showpoint2(e.result.e1,e.result.e2,e.result.e3,e.result.e4)
+      });
+      
+      
+      map.on('load', () => {
+        map.resize();
+        map.doubleClickZoom.disable();
+        map.addSource('states', {
+          'type': 'geojson',
+          'data': 'data/new.geojson'
+        });
+        map.addLayer({
+          'id': 'state-fills',
+          'type': 'fill',
+          'source': 'states',
+          'layout': {},
+          'paint': {
+            'fill-color': '#1C3555',
+            'fill-opacity': [
+            'case',
+            ['boolean', ['feature-state', 'hover'], false],
+            1,
+            0.5
+            ]
+          }
+        });
+        map.addLayer({
+          'id': 'state-borders',
+          'type': 'line',
+          'source': 'states',
+          'layout': {},
+          'paint': {
+            'line-color': '#1C3555',
+            'line-width': 0,
+            
+          }
+        });
+        map.addSource('ocean', {
+          'type': 'geojson',
+          'data': 'data/ocean.geojson'
+        });
+        map.addLayer({
+          'id': 'oceans',
+          'type': 'fill',
+          'source': 'ocean',
+          'layout': {},
+          'paint': {
+            'fill-color': '#FFF'
+            
+          }
+        });
+        let abc = getGlobalData();
+        const a = abc[0], b = abc[1], c= abc[2], d=abc[3],tiger=abc[4],cougar=abc[5],lynx=abc[6],panther=abc[7],f600=abc[8],f1000=abc[9],f2000=abc[10],f3000=abc[11],f4000=abc[12],usv=abc[13];
+        abc.splice(0,14);
+        var gpopup;
+        var globaldescription = `<h1><u>`+`Global Overview`+`</u></h1><br>`
+        + `<b><div class = "alignleft">Total Systems:</div><div align="right" style="word-wrap: break-word">`+ d +`</div></b>`
+        + `<div class = "alignleft">&emsp;Tiger: </div><div class = "alignright">`+ tiger +`</div><br>`
+        + `<div class = "alignleft">&emsp;Cougar: </div><div class = "alignright">`+ cougar +`</div><br>`
+        + `<div class = "alignleft">&emsp;Lynx: </div><div class = "alignright">`+ lynx +`</div><br>`
+        + `<div class = "alignleft">&emsp;Panther: </div><div class = "alignright">`+ panther +`</div></b><br>`
+        + `<div class = "alignleft">&emsp;FCV 600: </div><div class = "alignright">`+ f600 +`</div><br>`
+        + `<div class = "alignleft">&emsp;FCV 1000: </div><div class = "alignright">`+ f1000 +`</div><br>`
+        + `<div class = "alignleft">&emsp;FCV 2000: </div><div class = "alignright">`+ f2000 +`</div><br>`
+        + `<div class = "alignleft">&emsp;FCV 3000: </div><div class = "alignright">`+ f3000 +`</div><br>`
+        + `<div class = "alignleft">&emsp;FCV 4000: </div><div class = "alignright">`+ f4000 +`</div><br>`
+        + `<div class = "alignleft">&emsp;USV: </div><div class = "alignright">`+ usv +`</div><br>`
+        + `<b><br><div class = "alignleft">Avg. Maintenance Compliance Indicator: </div><div class = "alignright">`+ b +`%</div></b><br><br><br>`
+        + `<b><a href="https://app.powerbi.com/groups/me/reports/c4b244bf-1e0d-47f7-a214-de2252eccb11/ReportSection" style="color:white;font-size:1vw">Avg. Utilisation Rate:  </a><div class = "alignright">`+ a +`%</div></b><br><br><br>`
+        + `<b><a href="https://app.powerbi.com/groups/me/reports/fa8717f9-9eac-4426-933e-0e59a2c09a9d/ReportSection6090cfc3e5e1ac6250cb" style="color:white;font-size:1vw">Total Fault Logs:  </a><div class = "alignright">`+ c +`</div></b>`;
+        map.on('click','oceans', (e) =>{
+          if(gpopup==null){
+          gpopup=new mapboxgl.Popup({maxWidth:'15%',anchor:'bottom'})
+
+        .setLngLat([-125,-35])
+        .setHTML(globaldescription)
+        .addTo(map);
+        map.flyTo({
+          
+          center: [0, 20.511633884425464],
+          duration: 5000,
+          zoom:0.5,
+          bearing:0,
+          pitch:0
+        })
+        }
+        else{
+          gpopup.remove();
+          gpopup=null;
+        }
+      
+        
+      
+      })
+      
+      });
+      
+      function showpoint(x,y,z){
+        var coordinates = x;  
+        var coord =[0, 20.511633884425464];
+        /*new mapboxgl.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(e.features[0].properties.getregion)
+        .addTo(map);*/
+        switch(y){
+          case 1:
+          map.flyTo({
+            center: [-85,11.6],
+            duration: 3000,
+            zoom:2.5,
+            bearing:0,
+            pitch:0
+          })
+          coord=[0,-15];
+          break;
+          case 2:
+          map.flyTo({
+            center: [24,42],
+            duration: 3000,
+            zoom:2.5,
+            bearing:0,
+            pitch:0
+          })
+          coord=[-50,0];
+          break;
+          case 3:
+          map.flyTo({
+            center: [50,0],
+            duration: 3000,
+            zoom:2.5,
+            bearing:0,
+            pitch:0
+          })
+          coord=[20,-20];
+          break;
+          case 4:
+          map.flyTo({
+            center: [62.7,36.4],
+            duration: 3000,
+            zoom:2.5,
+            bearing:0,
+            pitch:0
+          })
+          coord=[-20,0];
+          break;
+          
+          
+          
+        }
+        let abc = getData(hoveredStateId);
+        const a = abc[0], b = abc[1], c= abc[2], d=abc[3],tiger=abc[4],cougar=abc[5],lynx=abc[6],panther=abc[7],f600=abc[8],f1000=abc[9],f2000=abc[10],f3000=abc[11],f4000=abc[12],usv=abc[13];
+        clickedregion=y;
+        clickstatus=true;
+        var x;
+        abc.splice(0,14);
+        var utiurl;
+        
+        switch(y)
+        {
+          case 1: 
+          utiurl= 'https://app.powerbi.com/groups/me/reports/c4b244bf-1e0d-47f7-a214-de2252eccb11/ReportSection7d1237de7977247126a7';
+          break;
+          case 2: 
+          utiurl = 'https://app.powerbi.com/groups/me/reports/c4b244bf-1e0d-47f7-a214-de2252eccb11/ReportSectionb91217c9b3eb1f2c87d1';
+          break;
+          case 3: 
+          utiurl = 'https://app.powerbi.com/groups/me/reports/c4b244bf-1e0d-47f7-a214-de2252eccb11/ReportSection6d061e965f0ba9aff032';
+          break;
+          case 4: 
+          utiurl = 'https://app.powerbi.com/groups/me/reports/c4b244bf-1e0d-47f7-a214-de2252eccb11/ReportSection9e671e02a6a22bd73827';
+          break;
+        }
+        var description = `<h1><u>`+regionnametext+`</u></h1><br>`
+        + `<b><div class = "alignleft">Total Systems:</div><div align="right" style="word-wrap: break-word">`+ d +`</div></b>`
+        + `<div class = "alignleft">&emsp;Tiger: </div><div class = "alignright">`+ tiger +`</div><br>`
+        + `<div class = "alignleft">&emsp;Cougar: </div><div class = "alignright">`+ cougar +`</div><br>`
+        + `<div class = "alignleft">&emsp;Lynx: </div><div class = "alignright">`+ lynx +`</div><br>`
+        + `<div class = "alignleft">&emsp;Panther: </div><div class = "alignright">`+ panther +`</div></b><br>`
+        + `<div class = "alignleft">&emsp;FCV 600: </div><div class = "alignright">`+ f600 +`</div><br>`
+        + `<div class = "alignleft">&emsp;FCV 1000: </div><div class = "alignright">`+ f1000 +`</div><br>`
+        + `<div class = "alignleft">&emsp;FCV 2000: </div><div class = "alignright">`+ f2000 +`</div><br>`
+        + `<div class = "alignleft">&emsp;FCV 3000: </div><div class = "alignright">`+ f3000 +`</div><br>`
+        + `<div class = "alignleft">&emsp;FCV 4000: </div><div class = "alignright">`+ f4000 +`</div><br>`
+        + `<div class = "alignleft">&emsp;USV: </div><div class = "alignright">`+ usv +`</div><br>`
+        + `<b><br><div class = "alignleft">Avg. Maintenance Compliance Indicator: </div><div class = "alignright">`+ b +`</div></b><br><br><br>`
+        + `<b><a href='${utiurl}' style="color:white;font-size:1vw">Avg. Utilisation Rate:  </a><div class = "alignright">`+ a +`</div></b><br>`
+        + `<b><a href='https://app.powerbi.com/groups/me/reports/fa8717f9-9eac-4426-933e-0e59a2c09a9d/ReportSection6090cfc3e5e1ac6250cb?filter=Region%2FName%20eq%20%27${filterregionname}%27' style="color:white;font-size:1vw">Total Fault Logs:  </a><div class = "alignright">`+ c +`</div></b>`;
+        
+        popup=new mapboxgl.Popup({maxWidth:'15%',anchor:'bottom'})
+        .setLngLat(coord)
+        .setHTML(description)
+        .addTo(map);
+        spinEnabled=false;
+        if (z > 0) {
+          if (hoveredStateId !== null) {
+            map.setFeatureState(
+            { source: 'states', id: hoveredStateId },
+            { hover: false }
+            );
+            regionDisplay.textContent = regionnametext;
+            
+          }
+          hoveredStateId = y;
+          map.setFeatureState(
+          { source: 'states', id: hoveredStateId },
+          { hover: true }
+          );
+          
+        };
+      }
+      
+      
+
+
+      map.on('click', 'state-fills', (e) => {
+        showpoint(e.features[0].geometry.coordinates.slice(),
+        e.features[0].id,
+        e.features.length
+        )
+      });
+      map.on('mousemove', 'state-fills', (e) => {
+        map.getCanvas().style.cursor = 'pointer';
+        const regionname = e.features[0].id;
+        switch(regionname)
+        {
+          case 1: filterregionname='Americas'
+          break;
+          case 2: filterregionname='Europe Africa'
+          break;
+          case 3: filterregionname='Asia Pacific'
+          break;
+          case 4: filterregionname='Middle East and India'
+          break;
+          case 5: filterregionname='Antarctica'
+          break;
+        }
+        regionDisplay= document.getElementById('regioninfo');
+        switch(regionname)
+        {
+          case 1: regionnametext='\xa0'+'Americas'+'\xa0'
+          break;
+          case 2: regionnametext='\xa0'+'Europe Africa'+'\xa0'
+          break;
+          case 3: regionnametext='\xa0'+'Asia Pacific'+'\xa0'
+          break;
+          case 4: regionnametext='\xa0'+'Middle East and India'+'\xa0'
+          break;
+          case 5: regionnametext='\xa0'+'Antarctica'+'\xa0'
+          break;
+        }
+        if (e.features.length > 0) {
+          if (hoveredStateId !== null) {
+            map.setFeatureState(
+            { source: 'states', id: hoveredStateId },
+            { hover: false }
+            );
+            regionDisplay.textContent = regionnametext;
+            
+          }
+          hoveredStateId = e.features[0].id;
+          map.setFeatureState(
+          { source: 'states', id: hoveredStateId },
+          { hover: true }
+          );
+        }
+        
+        
+      });
+      // When the mouse leaves the state-fill layer, update the feature state of the
+      // previously hovered feature.
+      map.on('mouseleave', 'state-fills', () => {
+        if (hoveredStateId !== null ) {
+          map.setFeatureState(
+          { source: 'states', id: hoveredStateId },
+          { hover: false }
+          );
+        }
+        hoveredStateId = null;
+        regionDisplay.textContent = '';
+        map.getCanvas().style.cursor = '';
+      });
+      // The following values can be changed to control rotation speed:
+      
+      // At low zooms, complete a revolution every two minutes.
+      const secondsPerRevolution = 120;
+      // Above zoom level 5, do not rotate.
+      const maxSpinZoom = 5;
+      // Rotate at intermediate speeds between zoom levels 3 and 5.
+      const slowSpinZoom = 3;
+      
+      let userInteracting = false;
+      let spinEnabled = true;
+      
+      
+      function spinGlobe() {
+        const zoom = map.getZoom();
+        const center = map.getCenter();
+        
+        let spindirection = true;
+        
+        if (spinEnabled && !userInteracting && zoom < maxSpinZoom) {
+          let distancePerSecond = 360 / secondsPerRevolution;
+          if (zoom > slowSpinZoom) {
+            // Slow spinning at higher zooms
+            const zoomDif =
+            (maxSpinZoom - zoom) / (maxSpinZoom - slowSpinZoom);
+            distancePerSecond *= zoomDif;
+          }
+          //const center = map.getCenter();
+          center.lng -= distancePerSecond;
+          
+          
+          
+          
+          // Smoothly animate the map over one second.
+          // When this animation is complete, it calls a 'moveend' event.
+          map.easeTo({ center, duration: 1000, easing: (n) => n });
+          
+        }
+        
+      }
+      
+      // Pause spinning on interaction
+      map.on('mousedown', () => {
+        userInteracting = true;
+      });
+      
+      // Restart spinning the globe when interaction is complete
+      map.on('mouseup', () => {
+        userInteracting = false;
+        spinGlobe();
+      });
+      
+      // These events account for cases where the mouse has moved
+      // off the map, so 'mouseup' will not be fired.
+      map.on('dragend', () => {
+        userInteracting = false;
+        spinGlobe();
+      });
+      map.on('pitchend', () => {
+        userInteracting = false;
+        spinGlobe();
+      });
+      map.on('rotateend', () => {
+        userInteracting = false;
+        spinGlobe();
+      });
+      
+      // When animation is complete, start spinning if there is no ongoing interaction
+      map.on('moveend', () => {
+        spinGlobe();
+      });
+      
+      //spinGlobe();
+      
+      map.addControl(new mapboxgl.NavigationControl());
+      spinEnabled=false;
+      document.addEventListener('touchmove',onmousemove,{passive:true});
+      
+      map.flyTo({
+          
+          center: [0, 30.511633884425464],
+          duration: 5000,
+          zoom:0.5,
+          bearing:0,
+          pitch:0
+        })
+
+        
+    </script>
+    
+  </body>
+  </html>
