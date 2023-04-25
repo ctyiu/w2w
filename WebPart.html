@@ -767,8 +767,8 @@
         `<hr><b><div class = "alignleft">Lease Status:</div><div align="right" style="word-wrap: break-word">`+ e4.LeaseStatus +`</div></b>` +
         `<b><div class = "alignleft">Umbilical Length:</div><div align="right" style="word-wrap: break-word">`+ e4.UmbilicalLength +`</div></b>` +
         `<b><div class = "alignleft">Maintenance Compliance Indicator:</div><div align="right" style="word-wrap: break-word">`+ e4.MCI +`</div></b>` +
-        `<b><a href="${utiurl}?filter=ROV_x0020_Assets%2FSystem%20eq%20%27${e2}%27" style="color:white;font-size:1vw">Utilisation Rate:  </a><div class = "alignright">`+ e4.UtilisationRate +`</div></b><br>` +
-        `<b><a href="https://app.powerbi.com/groups/me/reports/fa8717f9-9eac-4426-933e-0e59a2c09a9d/ReportSection6090cfc3e5e1ac6250cb?filter=System%2FName%20eq%20%27${e2}%27" style="color:white;font-size:1vw">Total Fault Logs:  </a><div class = "alignright">`+ e4.FaultLogs +`</div></b>`;
+        `<b><a href="${utiurl}?filter=ROV_x0020_Assets%2FSystem%20eq%20%27${e2}%27" target="_blank" style="color:white;font-size:1vw">Utilisation Rate:  </a><div class = "alignright">`+ e4.UtilisationRate +`</div></b><br>` +
+        `<b><a href="https://app.powerbi.com/groups/me/reports/fa8717f9-9eac-4426-933e-0e59a2c09a9d/ReportSection6090cfc3e5e1ac6250cb?filter=System%2FName%20eq%20%27${e2}%27" target="_blank" style="color:white;font-size:1vw">Total Fault Logs:  </a><div class = "alignright">`+ e4.FaultLogs +`</div></b>`;
         // Ensure that if the map is zoomed out such that multiple
         // copies of the feature are visible, the popup appears
         // over the copy being pointed to.
@@ -911,8 +911,8 @@
         + `<div class = "alignleft">&emsp;FCV 4000: </div><div class = "alignright">`+ f4000 +`</div><br>`
         + `<div class = "alignleft">&emsp;USV: </div><div class = "alignright">`+ usv +`</div><br>`
         + `<b><br><div class = "alignleft">Avg. Maintenance Compliance Indicator: </div><div class = "alignright">`+ b +`%</div></b><br><br><br>`
-        + `<b><a href="https://app.powerbi.com/groups/me/reports/c4b244bf-1e0d-47f7-a214-de2252eccb11/ReportSection" style="color:white;font-size:1vw">Avg. Utilisation Rate:  </a><div class = "alignright">`+ a +`%</div></b><br><br><br>`
-        + `<b><a href="https://app.powerbi.com/groups/me/reports/fa8717f9-9eac-4426-933e-0e59a2c09a9d/ReportSection6090cfc3e5e1ac6250cb" style="color:white;font-size:1vw">Total Fault Logs:  </a><div class = "alignright">`+ c +`</div></b>`;
+        + `<b><a href="https://app.powerbi.com/groups/me/reports/c4b244bf-1e0d-47f7-a214-de2252eccb11/ReportSection" target="_blank" style="color:white;font-size:1vw">Avg. Utilisation Rate:  </a><div class = "alignright">`+ a +`%</div></b><br><br><br>`
+        + `<b><a href="https://app.powerbi.com/groups/me/reports/fa8717f9-9eac-4426-933e-0e59a2c09a9d/ReportSection6090cfc3e5e1ac6250cb" target="_blank" style="color:white;font-size:1vw">Total Fault Logs:  </a><div class = "alignright">`+ c +`</div></b>`;
         map.on('click','oceans', (e) =>{
           if(gpopup==null){
           gpopup=new mapboxgl.Popup({maxWidth:'15%',anchor:'bottom'})
@@ -1028,8 +1028,8 @@
         + `<div class = "alignleft">&emsp;FCV 4000: </div><div class = "alignright">`+ f4000 +`</div><br>`
         + `<div class = "alignleft">&emsp;USV: </div><div class = "alignright">`+ usv +`</div><br>`
         + `<b><br><div class = "alignleft">Avg. Maintenance Compliance Indicator: </div><div class = "alignright">`+ b +`</div></b><br><br><br>`
-        + `<b><a href='${utiurl}' style="color:white;font-size:1vw">Avg. Utilisation Rate:  </a><div class = "alignright">`+ a +`</div></b><br>`
-        + `<b><a href='https://app.powerbi.com/groups/me/reports/fa8717f9-9eac-4426-933e-0e59a2c09a9d/ReportSection6090cfc3e5e1ac6250cb?filter=Region%2FName%20eq%20%27${filterregionname}%27' style="color:white;font-size:1vw">Total Fault Logs:  </a><div class = "alignright">`+ c +`</div></b>`;
+        + `<b><a href='${utiurl}' target="_blank" style="color:white;font-size:1vw">Avg. Utilisation Rate:  </a><div class = "alignright">`+ a +`</div></b><br>`
+        + `<b><a href='https://app.powerbi.com/groups/me/reports/fa8717f9-9eac-4426-933e-0e59a2c09a9d/ReportSection6090cfc3e5e1ac6250cb?filter=Region%2FName%20eq%20%27${filterregionname}%27' target="_blank" style="color:white;font-size:1vw">Total Fault Logs:  </a><div class = "alignright">`+ c +`</div></b>`;
         
         popup=new mapboxgl.Popup({maxWidth:'100%',anchor:'center'})
         .setLngLat(coord)
